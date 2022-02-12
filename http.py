@@ -4,17 +4,26 @@ import os
 
 def handle_request(request):
     headers = request.split('\n')
-    filename = headers[0].split()[1]
+    
+    try:
+        filename = headers[0].split()[1]
+    except IndexError as e:
+        print(e)
+        
+    
     if filename == '/':
-        filename = 'index.html'
-
-    if filename == '/hi':
-        filename = 'hi.php'
+        filename = '/index.html'
 
     try:
+        filename = './app' + filename
+        print(filename)
         content = ''
         if '.php' in filename:
-            content = handle_php(filename)
+            content = dynamic_handler(filename, 'php')  
+        elif '.py' in filename:
+            content = dynamic_handler(filename, 'python')
+        elif '.js' in filename:
+            content = dynamic_handler(filename, 'node')
         else:
             fin = open(filename)
             content = fin.read()
@@ -27,9 +36,9 @@ def handle_request(request):
     return response
 
 
-def handle_php(filename):
+def dynamic_handler(filename, command):
     filename = os.getcwd() + '/' + filename
-    proc = subprocess.Popen(f"php {filename}", shell=True, stdout=subprocess.PIPE)
+    proc = subprocess.Popen(f"{command} {filename}", shell=True, stdout=subprocess.PIPE)
     return proc.stdout.read().decode("utf-8")
 
 
@@ -59,6 +68,7 @@ try:
         # Close connection
         client_connection.close()
 except (Exception,KeyboardInterrupt) as e:
-    print('\nClosing connection gracefully!! ', e)
+    print('\nClosing connection gracefully!! ')
+    print(e.with_traceback(), e)
     # Close socket
     server_socket.close()
